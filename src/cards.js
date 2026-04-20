@@ -16,7 +16,7 @@ async function getCardDetails(cardId) {
         [cardId]
     );
     return {
-        name: result?.name || "Unknown Card",
+        name: result?.name || `Card #${cardId}`,
         season: result?.season || "Unknown",
         color: result?.color || "reset"
     };

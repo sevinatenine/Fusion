@@ -1,5 +1,5 @@
 const readline = require('node:readline/promises');
-const { stdin: input, stdout: output } = require('node:process');
+const { stdin: input, stdout: output, exit } = require('node:process');
 const chalkModule = require('chalk');
 
 const mysql = require("./mysql");
@@ -25,10 +25,11 @@ async function displayCards(userSecret) {
 exports.run = async function() {
     const rl = readline.createInterface({ input, output });
 
-    console.log("Fusion Admin Panel");
+    console.log("\nFusion Admin Panel");
     console.log("Commands: users, cards <username>, give <username> <cardId>, money <username> <amount>, quit\n");
 
     while (true) {
+        try {
         const line = await rl.question('admin> ');
         const cmdSplit = line.split(" ").filter(s => s.length > 0);
 
@@ -89,5 +90,9 @@ exports.run = async function() {
         } else {
             console.log(`Unknown command: ${cmd}`);
         }
+    } catch (AbortError) {
+        console.log("^C\nGoodbye.")
+        exit();
+    }
     }
 }
