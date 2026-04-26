@@ -8,14 +8,14 @@ Fusion is a CLI TCG game that lives in your terminal. You can collect and trade 
 
 We know there are lots of TCG's out there, but Fusion is the best choice for a tech-y TCG.
 
-| Feature          | Fusion               | Others    |
-| ---------------- | -------------------- | --------- |
-| Card numbering   | uint16_t             | Arbitrary |
-| Card naming      | Based on card number | Arbitrary |
-| Theme            | Tech/Computers       | Other     |
-| Encourages bots? | Yes                  | No        |
-| Runs...          | In the web           | CLI       |
-| Has cool docs?   | Yes                  | No        |
+| Feature          | Fusion               | Others     |
+| ---------------- | -------------------- | ---------- |
+| Card numbering   | uint16_t             | Arbitrary  |
+| Card naming      | Based on card number | Arbitrary  |
+| Theme            | Tech/Computers       | Other      |
+| Encourages bots? | Yes                  | No         |
+| Runs...          | CLI                  | In the web |
+| Has cool docs?   | Yes                  | No         |
 
 # How to Connect
 

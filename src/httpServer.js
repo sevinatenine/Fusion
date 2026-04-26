@@ -6,6 +6,10 @@ async function runServer(PORT, HOST) {
 
     app.use(express.static(path.join(__dirname, "../docs/site")));
 
+    app.get("/api/cards.csv", (req, res) => {
+        res.sendFile(path.join(__dirname, "../data/cards.csv"));
+    });
+
     app.listen(PORT, HOST, () => {
         console.log(`HTTP server running on http://${HOST}:${PORT}`);
     });

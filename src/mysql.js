@@ -26,3 +26,10 @@ exports.runQuerySingle = async function(query, params) {
 exports.runQueryNoResult = async function(query, params) {
     await exports.runQuery(query, params);
 }
+
+exports.runRawQuery = async (sql, params = []) => {
+    const [rows] = await pool.query(sql, params);
+    return rows;
+};
+
+exports.pool = pool;

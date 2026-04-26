@@ -1,8 +1,19 @@
 site_name: Fusion
-theme: terminal
+theme:
+  name: material
+  palette: 
+    - scheme: default # Light mode
+      toggle:
+        icon: material/brightness-7 
+        name: Switch to dark mode
+    - scheme: slate   # Dark mode
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
 nav:
   - Home: index.md
   - Connecting: connecting.md
   - Getting Started: getting-started.md
   - Cards and Currency: cards-currency.md
   - Commands: commands.md
+  - API: api.md

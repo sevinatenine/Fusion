@@ -60,7 +60,7 @@ exports.run = async function() {
         } else if (cmd === "give") {
             const username = cmdSplit[1];
             const cardId = parseInt(cmdSplit[2]);
-            if (!username || !cardId) { console.log("Usage: give <username> <cardId>"); continue; }
+            if (!username || cmdSplit[2] === undefined || isNaN(cardId)) { console.log("Usage: give <username> <cardId>"); continue; }
 
             const user = await mysql.runQuerySingle("SELECT secret FROM users WHERE username = ?", [username]);
             if (!user) { console.log("User not found."); continue; }
