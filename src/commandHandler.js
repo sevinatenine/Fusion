@@ -61,7 +61,6 @@ async function clientHandler(socket) {
     welcomeMessage(socket);
 
     try {
-
         while (true) {
             socket.write("> ");
 
