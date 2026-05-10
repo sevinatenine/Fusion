@@ -24,10 +24,13 @@ id,name,season_id
 110,POP3,1
 128,Commodore 128,1
 143,IMAP,1
+232,RS-232,1
 255,0xFF,1
 404,404: Card Not Found,1
 418,418: I'm a teapot,1
+422,RS-422,1
 443,HTTPS,1
+485,RS-485,1
 1337,Leet,1
 2000,Y2K,1
 8664,x86_64,1
