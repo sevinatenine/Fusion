@@ -5,9 +5,24 @@ const dgram = require("node:dgram");
 
 function receive(socket) {
     return new Promise((resolve, reject) => {
-        socket.once('data', (data) => resolve(data.toString().trim()));
-        socket.once('close', () => reject(new Error('disconnected')));
-        socket.once('error', (err) => reject(err));
+        let buf = "";
+
+        function onData(data) {
+            buf += data;
+            const i = buf.indexOf("\n");
+            if (i !== -1) {
+                const line = buf.slice(0, i).trim();
+                buf = buf.slice(i + 1);
+                socket.off('data', onData);
+                socket.off('close', onClose);
+                resolve(line);
+            }
+        }
+
+        function onClose() { reject(new Error('disconnected')); }
+
+        socket.on('data', onData);
+        socket.once('close', onClose);
     });
 }
 
@@ -19,6 +34,7 @@ var clients = new Set();
 
 async function auth(token) {
     const client = dgram.createSocket('udp4');
+    await new Promise(resolve => client.bind(resolve));
     client.send(Buffer.from(token), 4167, "localhost");
     let response;
     try {
@@ -40,9 +56,9 @@ async function auth(token) {
     }
 }
 
-function broadcast(message) {
+function broadcast(message, exclude = null) {
     for (var client of clients) {
-        send(client, message);
+        if (client !== exclude && client.authenticated) send(client, message);
     }
 }
 
@@ -102,7 +118,7 @@ async function commandHandler(socket) {
             const msgPayload = { success: true, type: "message", from: socket.username, message: decoded.message };
 
             if (!decoded.to) {
-                broadcast({ ...msgPayload, direct: false });
+                broadcast({ ...msgPayload, direct: false }, socket);
             } else {
                 var recipient = Array.from(clients).find(c => c.username === decoded.to);
                 if (!recipient) {

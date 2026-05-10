@@ -1,11 +1,13 @@
 const chalkModule = require('chalk');
 var { AsciiTable3 } = require('ascii-table3');
 const crypto = require('crypto');
+const EventEmitter = require('events');
 
 const mysql = require("./mysql");
 const cards = require("./cards");
 const secrets = require('./secrets');
 const utils = require('./utils');
+const chatServers = require("./chatServers");
 const sysLogins = require('./sysLogins').sysLogins();
 
 const chalk = new chalkModule.Chalk({ level: 1 });
@@ -19,9 +21,24 @@ function welcomeMessage(socket) {
 
 function receive(socket) {
     return new Promise((resolve, reject) => {
-        socket.once('data', (data) => resolve(data.toString().trim()));
-        socket.once('close', () => reject(new Error('disconnected')));
-        socket.once('error', (err) => reject(err));
+        let buf = "";
+
+        function onData(data) {
+            buf += data;
+            const i = buf.indexOf("\n");
+            if (i !== -1) {
+                const line = buf.slice(0, i).trim();
+                buf = buf.slice(i + 1);
+                socket.off('data', onData);
+                socket.off('close', onClose);
+                resolve(line);
+            }
+        }
+
+        function onClose() { reject(new Error('disconnected')); }
+
+        socket.on('data', onData);
+        socket.once('close', onClose);
     });
 }
 
@@ -83,10 +100,10 @@ var commands = {
     "search-users <query>": "Search for users by username",
     "search-seasons <query>": "Search for seasons by name",
     "whoami": "Show your username",
-    "token <+|-|list|get> [name (except list)]": "Configure identification tokens for external services",
+    "token <+|-|list|get|def> [name (except list)]": "Configure identification tokens for external services",
     "servers <+|-|list|get> [name (except list)]": "Attach chat servers to names",
-    "connect-chat <server-url|server-name> [token]": "Connect to the chat server",
-    "message <message> [username]": "Send a message to the chat (optionally to a specific user)",
+    "connect-chat <server-url|server-name> [token-name]": "Connect to the chat server",
+    "message <message> [@username]": "Send a message to the chat (optionally to a specific user)",
     "chat-console": "Enters the chat console. Use exit command to leave.",
     "logout": "Logout of your account",
     "exit": "Exit the program",
@@ -109,6 +126,10 @@ async function clientHandler(socket) {
     var clientSecret = "";
 
     var userLoggedIn = "";
+    var defaultToken = "";
+    var connectedServer = "";
+    var usedToken = "";
+    var chatEmitter;
 
     welcomeMessage(socket);
 
@@ -147,6 +168,12 @@ async function clientHandler(socket) {
                         var username = user.username;
 
                         userLoggedIn = username;
+
+                        var tokenRow = await mysql.runQuerySingle(
+                            "SELECT default_token FROM users WHERE secret = ?",
+                            [clientSecret]
+                        );
+                        if (tokenRow?.default_token) defaultToken = tokenRow.default_token;
 
                         socket.write(`Login successful.\nWelcome ${formatUsername(username)}.\n`);
                     }
@@ -416,7 +443,7 @@ async function clientHandler(socket) {
                     }
 
                     if (cmdSplit.length < 2) {
-                        socket.write("Usage: token [+|-|list|get] [name (except list)]\n");
+                        socket.write("Usage: token <+|-|list|get> [name (except list)]\n");
                         continue;
                     }
 
@@ -474,11 +501,200 @@ async function clientHandler(socket) {
                         } else {
                             socket.write(`Value for token ${cmdSplit[2]}: ${token.value}\n`);
                         }
+                    } else if (cmdSplit[1] == "def") {
+                        if (!cmdSplit[2]) {
+                            socket.write("Usage: token def <name>\n");
+                            continue;
+                        }
+
+                        var token = await mysql.runQuerySingle(
+                            "SELECT value FROM tokens WHERE user_secret = ? AND name = ?",
+                            [clientSecret, cmdSplit[2]]
+                        );
+
+                        if (!token) {
+                            socket.write("Token not found.\n");
+                            continue;
+                        }
+
+                        await mysql.runQueryNoResult(
+                            "UPDATE users SET default_token = ? WHERE secret = ?",
+                            [token.value, clientSecret]
+                        );
+
+                        defaultToken = token.value;
+                        socket.write(`Set default token: ${cmdSplit[2]}\n`);
                     } else {
-                        socket.write("Usage: token [+|-|list|get] [name (except list)]\n");
+                        socket.write("Usage: token <+|-|list|get> [name (except list)]\n");
                         continue;
                     }
 
+                    break;
+                } case "servers": {
+                    if (!loggedIn) {
+                        socket.write("You must be logged in to use this command.\n");
+                        continue;
+                    }
+
+                    if (cmdSplit.length < 2) {
+                        socket.write("Usage: servers [+|-|list|get] [name (except list)]\n");
+                        continue;
+                    }
+
+                    if (cmdSplit[1] === "+") {
+                        if (!cmdSplit[2] || !cmdSplit[3]) {
+                            socket.write("Usage: servers + <name> <url>\n");
+                            continue;
+                        }
+
+                        var id = crypto.randomBytes(16).toString('hex');
+
+                        await mysql.runQueryNoResult(
+                            "INSERT INTO servers (id, user_secret, name, value) VALUES (?, ?, ?, ?)",
+                            [id, clientSecret, cmdSplit[2], cmdSplit[3]]
+                        );
+
+                        socket.write(`Created server ${cmdSplit[2]} pointing to ${cmdSplit[3]}\n`);
+                    } else if (cmdSplit[1] === "-") {
+                        if (!cmdSplit[2]) {
+                            socket.write("Usage: servers - <name>\n");
+                            continue;
+                        }
+
+                        await mysql.runQueryNoResult(
+                            "DELETE FROM servers WHERE user_secret = ? AND name = ?",
+                            [clientSecret, cmdSplit[2]]
+                        );
+
+                        socket.write(`Deleted server ${cmdSplit[2]}\n`);
+                    } else if (cmdSplit[1] === "list") {
+                        var servers = await mysql.runQuery(
+                            "SELECT name, value FROM servers WHERE user_secret = ?",
+                            [clientSecret]
+                        );
+
+                        if (servers.length === 0) {
+                            socket.write("No servers found.\n");
+                        } else {
+                            socket.write("Servers:\n");
+                            for (var server of servers) {
+                                socket.write(`  ${server.name}: ${server.value}\n`);
+                            }
+                        }
+                    } else if (cmdSplit[1] === "get") {
+                        if (!cmdSplit[2]) {
+                            socket.write("Usage: servers get <name>\n");
+                            continue;
+                        }
+
+                        var server = await mysql.runQuerySingle(
+                            "SELECT value FROM servers WHERE user_secret = ? AND name = ?",
+                            [clientSecret, cmdSplit[2]]
+                        );
+
+                        if (!server) {
+                            socket.write("Server not found.\n");
+                        } else {
+                            socket.write(`Value for server ${cmdSplit[2]}: ${server.value}\n`);
+                        }
+                    } else {
+                        socket.write("Usage: servers [+|-|list|get] [name (except list)]\n");
+                    }
+
+                    break;
+                } case "connect-chat": {
+                    if (!loggedIn) {
+                        socket.write("You must be logged in to use this command.\n");
+                        continue;
+                    }
+
+                    if (cmdSplit.length < 2) {
+                        socket.write("Usage: connect-chat <server-url|server-name> [token-name]\n");
+                        continue;
+                    }
+
+                    if (cmdSplit[1].split(":").length != 2) {
+                        var server = await mysql.runQuerySingle(
+                            "SELECT value FROM servers WHERE user_secret = ? AND name = ?",
+                            [clientSecret, cmdSplit[1]]
+                        );
+                        if (!server) {
+                            socket.write("Server not found.\n");
+                            continue;
+                        }
+
+                        console.log(server.value);
+
+                        connectedServer = server.value;
+                    } else {
+                        connectedServer = cmdSplit[1];
+                    }
+
+                    if (cmdSplit[2]) {
+                        var token = await mysql.runQuerySingle(
+                            "SELECT value FROM tokens WHERE user_secret = ? AND name = ?",
+                            [clientSecret, cmdSplit[2]]
+                        );
+
+                        if (!token) {
+                            socket.write("Token not found.\n");
+                            continue;
+                        } else {
+                            usedToken = token.value;
+                    }
+
+                    } else {
+                        if (defaultToken == "") {
+                            socket.write("No default token selected. Run token def <token_name>.\n");
+                            continue;
+                        } else {
+                            usedToken = defaultToken;
+                        }
+                    }
+                    
+                    socket.write(`Connecting...\n`);
+                    chatEmitter = new EventEmitter();
+
+                    chatEmitter.on("connectFail", function() {
+                        chatEmitter = null;
+                        socket.write("\rFailed to connect.\n> ")
+                    });
+
+                    chatEmitter.on("connected", function() {
+                        socket.write("\rConnected.\n> ")
+                    });
+
+                    console.log(connectedServer, usedToken);
+
+                    chatServers.createChatServerConnection(connectedServer, usedToken, socket, chatEmitter);
+
+                    break;
+                } case "message": {
+                    if (!loggedIn) {
+                        socket.write("You must be logged in to use this command.\n");
+                        continue;
+                    }
+
+                    if (!chatEmitter) {
+                        socket.write("You are not connected to a server.\n");
+                        continue;
+                    }
+
+                    if (cmdSplit.length < 2) {
+                        socket.write("Usage: message <message> [@username]\n");
+                        continue;
+                    }
+
+                    var toUser = undefined;
+                    if (cmdSplit.length >= 3 && cmdSplit[cmdSplit.length - 1][0] === "@") {
+                        toUser = cmdSplit[cmdSplit.length - 1].slice(1);
+                    }
+
+                    const msgText = toUser
+                        ? cmdSplit.slice(1, cmdSplit.length - 1).join(" ")  // strip @username
+                        : cmdSplit.slice(1).join(" ");
+
+                    chatEmitter.emit("sendMessage", { message: msgText, to: toUser });
                     break;
                 } case "logout": case "🪵out": {
                     loggedIn = false;

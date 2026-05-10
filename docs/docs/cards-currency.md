@@ -48,7 +48,7 @@ Each coin is worth 10 times the previous.
 I.E. 10 Picons = 1 Nanon, 10 Nanons = 1 Micron, etc.
 
 For comparison, 1 Picon is approximately $0.01 USD and 1 Nanon is $0.10 USD.
-> **NOTE**: You CAN NOT buy coins for Fusion and anyone claiming to sell them is likely trying to scam you.
+> **NOTE**: You CAN NOT buy coins for Fusion with real life money and anyone claiming to sell them is likely trying to scam you.
 
 If you do not seee a unit, then assume it is in unons.
 

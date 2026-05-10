@@ -66,7 +66,6 @@ Show stats.
 Search cards by name.
 
 - `search-cards dragon` — Find all cards with "dragon" in the name
-- `search-cards "fire sword"` — Exact phrase search
 
 #### `search-users <query>`
 Search users by username.
@@ -82,13 +81,14 @@ Search seasons by name.
 
 ### Configuration
 
-#### `token <+|-|list|get> [name]`
+#### `token <+|-|list|get|def> [name]`
 Manage auth tokens.
 
 - `token list` — List all saved tokens
 - `token + mytoken` — Create a new token named "mytoken"
 - `token - mytoken` — Delete the token named "mytoken"
 - `token get mytoken` — Print the value of "mytoken"
+- `token def mytoken` - Sets default token as "mytoken"
 
 #### `servers <+|-|list|get> [name]`
 Manage server aliases.
@@ -102,18 +102,18 @@ Manage server aliases.
 
 ### Chat
 
-#### `connect-chat <url|name> [token]`
+#### `connect-chat <url|name> [token-name]`
 Connect to a chat server.
 
 - `connect-chat prod` — Connect using saved server alias "prod"
 - `connect-chat tcp://localhost:1337` — Connect by URL directly
 - `connect-chat prod mytoken` — Connect using alias "prod" and token "mytoken"
 
-#### `message <message> [username]`
+#### `message <message> [@username]`
 Send a chat message.
 
-- `message "hello everyone"` — Broadcast to all connected users
-- `message "hey" alice` — Send directly to alice
+- `message hello everyone!` — Broadcast to all connected users
+- `message hey @alice` — Send directly to alice
 
 #### `chat-console`
 Enter interactive chat mode.
