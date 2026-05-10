@@ -1,6 +1,10 @@
 const readline = require('node:readline/promises');
 const { stdin: input, stdout: output, exit } = require('node:process');
 const chalkModule = require('chalk');
+const { spawn } = require('child_process');
+var utils = require("./utils");
+
+const { AsciiTable3, AlignmentEnum } = require('ascii-table3');
 
 const mysql = require("./mysql");
 const cards = require("./cards");
@@ -26,7 +30,7 @@ exports.run = async function() {
     const rl = readline.createInterface({ input, output });
 
     console.log("\nFusion Admin Panel");
-    console.log("Commands: users, cards <username>, give <username> <cardId>, money <username> <amount>, quit\n");
+    console.log("Commands: users, cards <username>, give <username> <cardId>, money <username> <amount>, sql, quit\n");
 
     while (true) {
         try {
@@ -82,6 +86,13 @@ exports.run = async function() {
             );
             console.log(`Gave ${chalk.yellow('$' + amount)} to ${chalk.cyan(username)}.`);
 
+        } else if (cmd == "sql") {
+            rl.pause();
+            await new Promise((resolve) => {
+                const child = spawn('mysql', ["-u", "root", `-p${process.env["DB_PASSWORD"]}`], { stdio: 'inherit' });
+                child.on('close', resolve);
+            });
+            rl.resume();
         } else if (cmd === "quit" || cmd === "exit") {
             console.log("Bye.");
             rl.close();

@@ -1,11 +1,11 @@
 const dgram = require('node:dgram');
 const mysql = require("./mysql");
-const server = dgram.createSocket('udp4'); // Use 'udp6' for IPv6
+const server = dgram.createSocket('udp4');
 
 exports.run = async (port, host) => {
     server.on('error', (err) => {
-    console.error(`Server error:\n${err.stack}`);
-    server.close();
+        console.error(`Server error:\n${err.stack}`);
+        server.close();
     });
 
     server.on('message', async (msg, rinfo) => {
@@ -29,7 +29,7 @@ exports.run = async (port, host) => {
 
     server.on('listening', async () => {
         const address = server.address();
-        console.log(`Server listening on ${address.address}:${address.port}`);
+        console.log(`Server listening on udp://${address.address}:${address.port}`);
     });
 
     server.bind(port, host);

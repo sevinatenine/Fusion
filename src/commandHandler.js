@@ -10,6 +10,8 @@ const utils = require('./utils');
 const chatServers = require("./chatServers");
 const sysLogins = require('./sysLogins').sysLogins();
 
+const http = require('http');
+
 const chalk = new chalkModule.Chalk({ level: 1 });
 
 function welcomeMessage(socket) {
@@ -121,6 +123,8 @@ function formatMoney(picons) {
     return `${value.toFixed(2)} ${units[index]}`;
 }
 
+const hasNonAscii = (str) => /[^\x00-\x7F]/.test(str);
+
 async function clientHandler(socket) {
     var loggedIn = false;
     var clientSecret = "";
@@ -130,6 +134,7 @@ async function clientHandler(socket) {
     var connectedServer = "";
     var usedToken = "";
     var chatEmitter;
+    var streak = 0;
 
     welcomeMessage(socket);
 
@@ -145,6 +150,18 @@ async function clientHandler(socket) {
             }
 
             const cmd = cmdSplit[0].toLowerCase();
+            if(cmd == "whatareyou") {
+                streak++;
+                if(streak >= 3) {
+                    socket.write(`I am Node.JS ${process.version} And please stop asking me questions!\n`);
+                } else socket.write("Unkown command.\n");
+                continue;
+            } else streak = 0;
+
+            if (hasNonAscii(cmd)) {
+                socket.write("I knew it! You're a chromebook user.");
+            }
+
             switch(cmd) {
                 case "login": case "🪵in": {
                     if (loggedIn) {
@@ -278,16 +295,36 @@ async function clientHandler(socket) {
                     break;
                 }
                 case "whoareyou": {
+                    socket.write(`$ whoami\n${require('os').userInfo().username}\n`);
                     socket.write("The better question is \x1b[3mwhat\x1b[0m am I????????????????????????????");
 
                     await utils.delay(1000);
 
                     for (let i = 0; i <= 0x10FFFF; i++) {
+                        if (i >= 1000) {
+                            break;
+                        }
                         try {
                             socket.write(String.fromCodePoint(i));
                         } catch (e) {
                         }
                     }
+                    break;
+                }
+                case "whereareyou": {
+                    http.get('http://ip-api.com/json/', (res) => {
+                        let data = '';
+                        res.on('data', (chunk) => data += chunk);
+                        res.on('end', () => {
+                            const location = JSON.parse(data);
+                            socket.write(`${location.city}, ${location.country}\n`);
+                        });
+                    }).on('error', (err) => {
+                        console.error('Error: ' + err.message);
+                    });
+
+                    await utils.delay(500);
+
                     break;
                 }
                 case "meaningoflife": {
@@ -446,7 +483,7 @@ async function clientHandler(socket) {
                     }
 
                     if (cmdSplit.length < 2) {
-                        socket.write("Usage: token <+|-|list|get> [name (except list)]\n");
+                        socket.write("Usage: token <+|-|list|get|def> [name (except list)]\n");
                         continue;
                     }
 
@@ -528,7 +565,7 @@ async function clientHandler(socket) {
                         defaultToken = token.value;
                         socket.write(`Set default token: ${cmdSplit[2]}\n`);
                     } else {
-                        socket.write("Usage: token <+|-|list|get> [name (except list)]\n");
+                        socket.write("Usage: token <+|-|list|get|def> [name (except list)]\n");
                         continue;
                     }
 
@@ -540,7 +577,7 @@ async function clientHandler(socket) {
                     }
 
                     if (cmdSplit.length < 2) {
-                        socket.write("Usage: servers [+|-|list|get] [name (except list)]\n");
+                        socket.write("Usage: servers <+|-|list|get> [name (except list)]\n");
                         continue;
                     }
 
@@ -601,7 +638,7 @@ async function clientHandler(socket) {
                             socket.write(`Value for server ${cmdSplit[2]}: ${server.value}\n`);
                         }
                     } else {
-                        socket.write("Usage: servers [+|-|list|get] [name (except list)]\n");
+                        socket.write("Usage: servers <+|-|list|get> [name (except list)]\n");
                     }
 
                     break;
@@ -656,6 +693,11 @@ async function clientHandler(socket) {
                     }
                     
                     socket.write(`Connecting...\n`);
+
+                    if (chatEmitter) {
+                        chatEmitter.emit("closeChat");
+                    }
+
                     chatEmitter = new EventEmitter();
 
                     chatEmitter.on("connectFail", function() {
@@ -703,6 +745,10 @@ async function clientHandler(socket) {
                     loggedIn = false;
                     clientSecret = "";
                     userLoggedIn = "";
+                    chatEmitter = "";
+                    defaultToken = "";
+                    usedToken = "";
+                    connectedServer = null;
                     socket.write("Logged out.\n");
                     break;
                 }

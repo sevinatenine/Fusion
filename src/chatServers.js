@@ -37,8 +37,6 @@ exports.createChatServerConnection = async function(address, accessToken, socket
     })
 
     client.on('data', (data) => {
-        console.log(data);
-
         if (!sentConnect) {
             sentConnect = true;
             chatEmitter.emit("connected");
@@ -51,7 +49,7 @@ exports.createChatServerConnection = async function(address, accessToken, socket
         }
         
         if (d.type == "message") {
-            socket.write(`\n[Message] <${d.from}>: ${d.message}\n`);
+            socket.write(`\n[Message] ${d.direct ? chalk.cyan("{DIRECT}") : ""} <${d.from}>: ${d.message}\n`);
         }
     });
 
@@ -59,4 +57,9 @@ exports.createChatServerConnection = async function(address, accessToken, socket
         chatEmitter.emit("connectFail");
         client.end();
     })
+
+    chatEmitter.on("closeChat", () => {
+        client.end();
+        delete client;
+    });
 }

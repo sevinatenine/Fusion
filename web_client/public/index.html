@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terminal</title>
+    <link rel="stylesheet" href="modules/xterm/css/xterm.css" />
+    <style>
+        body { margin: 0; }
+        #terminal { width: 100vw; height: 100vh; }
+    </style>
+</head>
+<body>
+    <div id="terminal"></div>
+
+    <script src="modules/xterm/lib/xterm.js"></script>
+    <script src="modules/xterm-addon-fit/lib/xterm-addon-fit.js"></script>
+    <script>
+        var term = new Terminal({
+        convertEol: true
+        });
+        const fitAddon = new FitAddon.FitAddon();
+
+        term.loadAddon(fitAddon);
+        term.open(document.getElementById('terminal'));
+        fitAddon.fit();
+
+        term.write('Connecting... ');
+
+        var ws = new WebSocket(`ws://${window.location.hostname}:43659`);
+
+        ws.binaryType = 'arraybuffer';
+
+        term.onData(data => {
+            if (ws.readyState === WebSocket.OPEN) {
+                ws.send(data);
+                if (data === '\r') {
+                    term.write('\r\n');
+                } else if (data.charCodeAt(0) === 127) {
+                    term.write('\b \b');
+                } else {
+                    term.write(data);
+                }
+            }
+        });
+
+        ws.onmessage = (event) => {
+            console.log(event.data);
+
+            if (event.data instanceof ArrayBuffer) {
+                term.write(new Uint8Array(event.data));
+            } else {
+                term.write(event.data);
+            }
+        };
+
+        ws.onopen = () => term.write('\r\nConnected.\r\n');
+        ws.onclose = () => term.write('\r\nConnection closed.\r\n');
+        ws.onerror = (e) => term.write('\r\nWebSocket error.\r\nFailed to connect.\r\n');
+
+        window.addEventListener('resize', () => fitAddon.fit());
+    </script>
+</body>
+</html>
