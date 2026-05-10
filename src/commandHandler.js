@@ -229,6 +229,8 @@ async function clientHandler(socket) {
 
                         userLoggedIn = username;
 
+                        loggedIn = true;
+
                         await registerUser(username, clientSecret);
                     }
                     break;
@@ -286,6 +288,7 @@ async function clientHandler(socket) {
                         } catch (e) {
                         }
                     }
+                    break;
                 }
                 case "meaningoflife": {
                     socket.write("42\n");

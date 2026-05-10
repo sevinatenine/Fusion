@@ -9,10 +9,10 @@
       
       
       
-        <link rel="prev" href="../api/">
+        <link rel="prev" href="../commands/">
       
       
-        <link rel="next" href="../contributing/">
+        <link rel="next" href="../http-card-api/">
       
       
         
@@ -23,7 +23,7 @@
     
     
       
-        <title>Architecture - Fusion</title>
+        <title>Server Architecture - Fusion</title>
       
     
     
@@ -110,7 +110,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Architecture
+              Server Architecture
             
           </span>
         </div>
@@ -364,17 +364,113 @@
       
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../api/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Server Architecture
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
   <span class="md-ellipsis">
     
   
-    API
+    Server Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#servers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Servers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#networking-diagram" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Networking Diagram
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../http-card-api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTTP Card API
   
 
     
@@ -391,26 +487,17 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../external-services/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Architecture
+    External Services
   
 
     
@@ -419,7 +506,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -498,6 +584,36 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#servers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Servers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#networking-diagram" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Networking Diagram
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -514,7 +630,48 @@
 
 
 <h1 id="server-architecture">Server Architecture</h1>
-<p>WIP</p>
+<h2 id="servers">Servers</h2>
+<p>Fusion runs multiple servers on the same ip address, with different ports.</p>
+<p>The servers run are:</p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Port</th>
+<th>Protocol</th>
+<th>Purpose</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Main Server</td>
+<td>23</td>
+<td>TCP (Netcat)</td>
+<td>Allows users to connect to Fusion and play the game</td>
+<td>Human Readable Format</td>
+</tr>
+<tr>
+<td>HTTP Server</td>
+<td>80</td>
+<td>HTTP (TCP)</td>
+<td>Docs and HTTP API</td>
+<td></td>
+</tr>
+<tr>
+<td>Auth Server</td>
+<td>4167</td>
+<td>UDP</td>
+<td>Allows external services (like chat servers) to authenticate</td>
+<td>JSON Format</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>Note for auth server: View <a href="../external-services/">External Services</a> for details on protocal and format.</p>
+</blockquote>
+<h2 id="networking-diagram">Networking Diagram</h2>
+<p><img alt="Networking Diagram" src="../images/networking-diagram.svg" /></p>
 
 
 

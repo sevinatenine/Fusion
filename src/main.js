@@ -6,7 +6,7 @@ const dbLoader = require("./dbLoader");
 const utils = require("./utils");
 
 const PORT = 23;
-const HTTP_PORT = 8080;
+const HTTP_PORT = 80;
 const AUTH_PORT = 4167;
 
 const HOST = "0.0.0.0";

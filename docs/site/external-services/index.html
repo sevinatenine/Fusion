@@ -9,10 +9,10 @@
       
       
       
-        <link rel="prev" href="../commands/">
+        <link rel="prev" href="../http-card-api/">
       
       
-        <link rel="next" href="../architecture/">
+        <link rel="next" href="../contributing/">
       
       
         
@@ -23,7 +23,7 @@
     
     
       
-        <title>API - Fusion</title>
+        <title>External Services - Fusion</title>
       
     
     
@@ -74,7 +74,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#api" class="md-skip">
+        <a href="#external-services" class="md-skip">
           Skip to content
         </a>
       
@@ -110,7 +110,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              API
+              External Services
             
           </span>
         </div>
@@ -364,6 +364,60 @@
       
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Server Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../http-card-api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTTP Card API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
     
   
   
@@ -383,7 +437,7 @@
   <span class="md-ellipsis">
     
   
-    API
+    External Services
   
 
     
@@ -401,7 +455,7 @@
   <span class="md-ellipsis">
     
   
-    API
+    External Services
   
 
     
@@ -427,10 +481,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#get-apicardscsv" class="md-nav__link">
+  <a href="#tokens" class="md-nav__link">
     <span class="md-ellipsis">
       
-        GET /api/cards.csv
+        Tokens
       
     </span>
   </a>
@@ -438,13 +492,91 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#get-apiseasonscsv" class="md-nav__link">
+  <a href="#auth-server-protocal" class="md-nav__link">
     <span class="md-ellipsis">
       
-        GET /api/seasons.csv
+        Auth Server Protocal
       
     </span>
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chat-server-protocal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chat Server Protocal
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Chat Server Protocal">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#request-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Request types
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Request types">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#login" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        login
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#message" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        message
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#quit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        quit
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#general-errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        General errors
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -452,33 +584,6 @@
   
 </nav>
       
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../architecture/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Architecture
-  
-
-    
-  </span>
-  
-  
-
-      </a>
     </li>
   
 
@@ -564,10 +669,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#get-apicardscsv" class="md-nav__link">
+  <a href="#tokens" class="md-nav__link">
     <span class="md-ellipsis">
       
-        GET /api/cards.csv
+        Tokens
       
     </span>
   </a>
@@ -575,13 +680,91 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#get-apiseasonscsv" class="md-nav__link">
+  <a href="#auth-server-protocal" class="md-nav__link">
     <span class="md-ellipsis">
       
-        GET /api/seasons.csv
+        Auth Server Protocal
       
     </span>
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chat-server-protocal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chat Server Protocal
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Chat Server Protocal">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#request-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Request types
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Request types">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#login" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        login
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#message" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        message
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#quit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        quit
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#general-errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        General errors
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -602,12 +785,172 @@
 
 
 
-<h1 id="api">API</h1>
-<p>The API primarily uses GET and POST requests to the same HTTP server that the docs are running on.</p>
-<h2 id="get-apicardscsv"><code>GET /api/cards.csv</code></h2>
-<p>Returns a CSV (Comma Separated Value list) of all the cards. </p>
-<h2 id="get-apiseasonscsv"><code>GET /api/seasons.csv</code></h2>
-<p>Returns a CSV (Comma Separated Value list) of all the seasons. </p>
+<h1 id="external-services">External Services</h1>
+<h2 id="tokens">Tokens</h2>
+<p>External services allow you to connect Fusion to other things.
+Some examples include:</p>
+<ul>
+<li>Chat servers</li>
+<li>etc.</li>
+</ul>
+<p>In order to conenct an external service, you first need to make a token.
+A token is a large number that can be used to authenticate yourself with these services.</p>
+<p>We do not recommend reusing tokens for multiple services because this could lead to security issues.</p>
+<p>In order to make a token, you can run the command:
+<code>token + &lt;name&gt;</code> where <code>&lt;name&gt;</code> is whatever you would like to call the token.</p>
+<p>Once you have created a token, you can use it to connect to external services.</p>
+<h2 id="auth-server-protocal">Auth Server Protocal</h2>
+<p>The auth server uses a UDP protocal that lets you get a username from a token.
+You send a UDP packet with the access token as a string, terminated by a new line (<code>\n</code>);</p>
+<p>The server will then reply with a username if the token is valid, or <code>...</code> if not. Both are terminated by a new line.</p>
+<p>For example:</p>
+<pre><code>Client --&gt; Server:      628efc1596b8fdff931cd9c087defbc8
+Server --&gt; Client:      simon
+
+Client2 --&gt; Server:     notarealtoken1234
+Server  --&gt; Client2:    ...
+</code></pre>
+<h2 id="chat-server-protocal">Chat Server Protocal</h2>
+<p>The chat server uses a TCP connection sending JSON data.
+Every request has a <code>type</code> field which identifies the packet type and every response has a <code>success</code> field which indicates if the response succeeded.</p>
+<p>A succesful response also had a <code>type</code> field.
+A failed response has a <code>error</code> field which details the error.
+Both responses have <code>message</code> field.</p>
+<p>Request:</p>
+<pre><code class="language-json">{
+    &quot;type&quot;: &quot;&lt;type&gt;&quot;,
+    ...
+}
+</code></pre>
+<p>Succesful response:</p>
+<pre><code class="language-json">{
+    &quot;success&quot;: true,
+    &quot;type&quot;: &quot;&lt;packet_type&quot;,
+    &quot;message&quot;: &quot;&lt;readable_message&gt;&quot;
+}
+</code></pre>
+<p>Failed response:</p>
+<pre><code class="language-json">{
+    &quot;success&quot;: false,
+    &quot;error&quot;: &quot;&lt;error_message&gt;&quot;,
+    &quot;message&quot;: &quot;&lt;readable_message&gt;&quot;
+}
+</code></pre>
+<h3 id="request-types">Request types</h3>
+<p>There are three request types: <code>login</code>, <code>message</code>, and <code>quit</code>.</p>
+<h4 id="login"><code>login</code></h4>
+<p>The <code>login</code> command takes in an <code>accessToken</code> field.</p>
+<pre><code class="language-json">{
+    &quot;type&quot;: &quot;login&quot;,
+    &quot;accessToken&quot;: &quot;628efc1596b8fdff931cd9c087defbc8&quot;
+}
+</code></pre>
+<p>The chat server will then verify with the authentication server.</p>
+<p><strong>Success</strong></p>
+<pre><code class="language-json">{
+    &quot;success&quot;: true,
+    &quot;type&quot;: &quot;login&quot;,
+    &quot;message&quot;: &quot;Login successful.&quot;,
+    &quot;username&quot;: &quot;simon&quot;
+}
+</code></pre>
+<p><strong>Failure</strong></p>
+<pre><code class="language-json">{
+    &quot;success&quot;: false,
+    &quot;error&quot;: &quot;ERR_MISSING_ACCESS_TOKEN&quot;,
+    &quot;message&quot;: &quot;Missing required field: accessToken.&quot;
+}
+</code></pre>
+<pre><code class="language-json">{
+    &quot;success&quot;: false,
+    &quot;error&quot;: &quot;ERR_INVALID_ACCESS_TOKEN&quot;,
+    &quot;message&quot;: &quot;The provided access token is invalid or expired.&quot;
+}
+</code></pre>
+<hr />
+<h4 id="message"><code>message</code></h4>
+<blockquote>
+<p>Note: You must be logged in to send this command.</p>
+</blockquote>
+<p>The <code>message</code> command takes in a <code>message</code> field and optionally a <code>to</code> field.
+If no <code>to</code> field is sent, then it is broadcasted to everybody.</p>
+<pre><code class="language-json">{
+    &quot;type&quot;: &quot;message&quot;,
+    &quot;message&quot;: &quot;Hello, Everyone!&quot;,
+    [OPTIONALLY] &quot;to&quot;: &quot;bob&quot;
+}
+</code></pre>
+<p><strong>Success</strong> — sent to the sender after the message is delivered</p>
+<pre><code class="language-json">{
+    &quot;success&quot;: true,
+    &quot;type&quot;: &quot;message_sent&quot;,
+    &quot;message&quot;: &quot;Message sent.&quot;
+}
+</code></pre>
+<p><strong>Received</strong> — sent to the recipient(s)</p>
+<pre><code class="language-json">{
+    &quot;success&quot;: true,
+    &quot;type&quot;: &quot;message&quot;,
+    &quot;from&quot;: &quot;simon&quot;,
+    &quot;message&quot;: &quot;Hello, Everyone!&quot;,
+    &quot;direct&quot;: false
+}
+</code></pre>
+<p>The <code>direct</code> field is <code>true</code> if the message was sent to a specific user via the <code>to</code> field, and <code>false</code> if it was broadcast.</p>
+<p><strong>Failure</strong></p>
+<pre><code class="language-json">{
+    &quot;success&quot;: false,
+    &quot;error&quot;: &quot;ERR_NOT_AUTHENTICATED&quot;,
+    &quot;message&quot;: &quot;You must be logged in to send messages.&quot;
+}
+</code></pre>
+<pre><code class="language-json">{
+    &quot;success&quot;: false,
+    &quot;error&quot;: &quot;ERR_MISSING_MESSAGE&quot;,
+    &quot;message&quot;: &quot;Missing required field: message.&quot;
+}
+</code></pre>
+<pre><code class="language-json">{
+    &quot;success&quot;: false,
+    &quot;error&quot;: &quot;ERR_USER_NOT_FOUND&quot;,
+    &quot;message&quot;: &quot;User \&quot;bob\&quot; not found or not online.&quot;
+}
+</code></pre>
+<hr />
+<h4 id="quit"><code>quit</code></h4>
+<p>Disconnects from the server.</p>
+<pre><code class="language-json">{
+    &quot;type&quot;: &quot;quit&quot;
+}
+</code></pre>
+<p><strong>Success</strong></p>
+<pre><code class="language-json">{
+    &quot;success&quot;: true,
+    &quot;type&quot;: &quot;quit&quot;,
+    &quot;message&quot;: &quot;Goodbye.&quot;
+}
+</code></pre>
+<hr />
+<h3 id="general-errors">General errors</h3>
+<p>These can be returned for any request.</p>
+<pre><code class="language-json">{
+    &quot;success&quot;: false,
+    &quot;error&quot;: &quot;ERR_NEEDS_TO_BE_JSON&quot;,
+    &quot;message&quot;: &quot;Request body must be valid JSON.&quot;
+}
+</code></pre>
+<pre><code class="language-json">{
+    &quot;success&quot;: false,
+    &quot;error&quot;: &quot;ERR_MISSING_TYPE&quot;,
+    &quot;message&quot;: &quot;Missing required field: type.&quot;
+}
+</code></pre>
+<pre><code class="language-json">{
+    &quot;success&quot;: false,
+    &quot;error&quot;: &quot;ERR_UNKNOWN_CMD&quot;,
+    &quot;message&quot;: &quot;Unknown command type: \&quot;&lt;type&gt;\&quot;.&quot;
+}
+</code></pre>
 
 
 
