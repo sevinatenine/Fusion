@@ -16,4 +16,8 @@ nav:
   - Getting Started: getting-started.md
   - Cards and Currency: cards-currency.md
   - Commands: commands.md
-  - API: api.md
+  - Server Architecture: architecture.md
+  - HTTP Card API: http-card-api.md
+  - External Services: external-services.md
+  - Contributing: contributing.md
+  - License: license.md

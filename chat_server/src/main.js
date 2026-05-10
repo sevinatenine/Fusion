@@ -11,30 +11,13 @@ function receive(socket) {
     });
 }
 
-/*
-
-type: "login"
-{
-    accessToken: "token"
+function send(socket, payload) {
+    socket.write(JSON.stringify(payload) + "\n");
 }
-
-type: "message"
-{
-    to: "username",
-    message: "text"
-}
-
-type: "quit"
-{
-    reason: "reason"
-}
-
-*/
 
 var clients = new Set();
 
 async function auth(token) {
-
     const client = dgram.createSocket('udp4');
     client.send(Buffer.from(token), 4167, "localhost");
     let response;
@@ -50,7 +33,7 @@ async function auth(token) {
 
     console.log("Auth response:", response);
 
-    if (response == "..." ) {
+    if (response == "...") {
         return { success: false };
     } else {
         return { success: true, username: response };
@@ -59,7 +42,7 @@ async function auth(token) {
 
 function broadcast(message) {
     for (var client of clients) {
-        client.write(message);
+        send(client, message);
     }
 }
 
@@ -71,69 +54,73 @@ async function commandHandler(socket) {
             data = await receive(socket);
         } catch (e) {
             console.log(chalk.yellow(`Client ${socket.remoteAddress}:${socket.remotePort} disconnected.`));
+            clients.delete(socket);
             break;
         }
 
         try {
             decoded = JSON.parse(data);
         } catch (e) {
-            socket.write("ERR_NEEDS_TO_BE_JSON\n");
+            send(socket, { success: false, error: "ERR_NEEDS_TO_BE_JSON", message: "Request body must be valid JSON." });
             continue;
         }
 
         if (!decoded.type) {
-            socket.write("ERR_MISSING_TYPE\n");
+            send(socket, { success: false, error: "ERR_MISSING_TYPE", message: "Missing required field: type." });
             continue;
         }
 
         if (decoded.type === "login") {
             if (!decoded.accessToken) {
-                socket.write("ERR_MISSING_ACCESS_TOKEN\n");
+                send(socket, { success: false, error: "ERR_MISSING_ACCESS_TOKEN", message: "Missing required field: accessToken." });
                 continue;
             }
 
             var { success, username } = await auth(decoded.accessToken);
 
             if (!success) {
-                socket.write("ERR_INVALID_ACCESS_TOKEN\n");
+                send(socket, { success: false, error: "ERR_INVALID_ACCESS_TOKEN", message: "The provided access token is invalid or expired." });
                 continue;
             }
 
             socket.authenticated = true;
             socket.username = username;
 
-            socket.write("LOGIN_SUCCESS\n");
+            send(socket, { success: true, type: "login", message: "Login successful.", username });
+
         } else if (decoded.type === "message") {
             if (!decoded.message) {
-                socket.write("ERR_MISSING_MESSAGE\n");
+                send(socket, { success: false, error: "ERR_MISSING_MESSAGE", message: "Missing required field: message." });
                 continue;
             }
 
             if (!socket.authenticated) {
-                socket.write("ERR_NOT_AUTHENTICATED\n");
+                send(socket, { success: false, error: "ERR_NOT_AUTHENTICATED", message: "You must be logged in to send messages." });
                 continue;
             }
-            
+
+            const msgPayload = { success: true, type: "message", from: socket.username, message: decoded.message };
+
             if (!decoded.to) {
-                broadcast(`MSG_FROM ${socket.username} ${decoded.message}\n`);
+                broadcast({ ...msgPayload, direct: false });
             } else {
                 var recipient = Array.from(clients).find(c => c.username === decoded.to);
                 if (!recipient) {
-
-                    broadcast(`MSG_FROM ${socket.username} ${decoded.message}\n`);
+                    send(socket, { success: false, error: "ERR_USER_NOT_FOUND", message: `User "${decoded.to}" not found or not online.` });
+                    continue;
                 } else {
-                    recipient.write(`MSG_FROM ${socket.username} ${decoded.message}\n`);
+                    send(recipient, { ...msgPayload, direct: true });
                 }
             }
 
-            socket.write("MSG_SENT\n");
+            send(socket, { success: true, type: "message_sent", message: "Message sent." });
 
         } else if (decoded.type === "quit") {
-            socket.write("BYE\n");
+            send(socket, { success: true, type: "quit", message: "Goodbye." });
             socket.end();
             break;
         } else {
-            socket.write("ERR_UNKNOWN_CMD\n");
+            send(socket, { success: false, error: "ERR_UNKNOWN_CMD", message: `Unknown command type: "${decoded.type}".` });
             continue;
         }
     }

@@ -9,7 +9,6 @@ exports.run = async (port, host) => {
     });
 
     server.on('message', async (msg, rinfo) => {
-        console.log(`Server received: ${msg} from ${rinfo.address}:${rinfo.port}`);
         let str = msg.toString("utf-8").trim();
         let res = await (mysql.runQuery("SELECT * FROM tokens WHERE value = ?", [str]));
 
@@ -24,7 +23,6 @@ exports.run = async (port, host) => {
             server.send(Buffer.from("...\n"), rinfo.port, rinfo.address);
             return;
         }
-        console.log(user.username);
         const response = Buffer.from(user.username + "\n");
         server.send(response, rinfo.port, rinfo.address);
     });

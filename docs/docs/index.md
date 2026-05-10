@@ -20,3 +20,7 @@ We know there are lots of TCG's out there, but Fusion is the best choice for a t
 # How to Connect
 
 Visit [Connecting](./connecting.md) to learn how to connect to Fusion.
+
+# Fusion's Cards and Currency
+
+Visit [Cards and Currency](./cards-currency.md) to learn more.
