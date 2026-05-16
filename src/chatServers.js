@@ -1,6 +1,9 @@
 const net = require('net');
 const EventEmitter = require('events');
 
+const chalkModule = require('chalk');
+const chalk = new chalkModule.Chalk({ level: 1 });
+
 function receive(socket) {
     return new Promise((resolve, reject) => {
         socket.once('data', (data) => resolve(data.toString().trim()));

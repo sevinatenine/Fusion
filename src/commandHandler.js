@@ -21,6 +21,21 @@ function welcomeMessage(socket) {
     socket.write("If you encounter any issues, please report them on GitHub\n\n");
 }
 
+const validColors = [
+    'black',           'red',            'green',
+    'yellow',          'blue',           'magenta',
+    'cyan',            'white',          'blackBright',
+    'gray',            'grey',           'redBright',
+    'greenBright',     'yellowBright',   'blueBright',
+    'magentaBright',   'cyanBright',     'whiteBright',
+    'bgBlack',         'bgRed',          'bgGreen',
+    'bgYellow',        'bgBlue',         'bgMagenta',
+    'bgCyan',          'bgWhite',        'bgBlackBright',
+    'bgGray',          'bgGrey',         'bgRedBright',
+    'bgGreenBright',   'bgYellowBright', 'bgBlueBright',
+    'bgMagentaBright', 'bgCyanBright',   'bgWhiteBright'
+];
+
 function receive(socket) {
     return new Promise((resolve, reject) => {
         let buf = "";
@@ -159,7 +174,7 @@ async function clientHandler(socket) {
             } else streak = 0;
 
             if (hasNonAscii(cmd)) {
-                socket.write("I knew it! You're a chromebook user.");
+                socket.write("I knew it! You're a chromebook user.\n");
             }
 
             switch(cmd) {
@@ -714,6 +729,82 @@ async function clientHandler(socket) {
                     chatServers.createChatServerConnection(connectedServer, usedToken, socket, chatEmitter);
 
                     break;
+                } case "chat-console": {
+                    if (!loggedIn) {
+                        socket.write("You must be logged in to use this command.\n");
+                        continue;
+                    }
+
+                    if (!chatEmitter) {
+                        socket.write("You are not connected to a server.\n");
+                        continue;
+                    }
+
+                    socket.write("Valid chat commands are: /exit, /color <color> <message>\nUse /exit to exit.\n\n");
+
+                    while (true) {
+                        socket.write("[Chat] > ");
+
+                        var message = (await receive(socket)).trim();
+                        var messageSplit = message.split(" ");
+
+                        if (messageSplit.length > 0) {
+
+                            if (messageSplit[0] == "/exit") {
+                                break;
+                            }
+
+                            if (messageSplit[0] == "/color") {
+                                if (messageSplit.length > 2) {
+                                    if (validColors.includes(messageSplit[1])) {
+                                        const colorFn = chalk[messageSplit[1]];
+                                        const remaining = messageSplit.slice(2);
+
+                                        var toUser = undefined;
+                                        if (remaining.length >= 2 && remaining[remaining.length - 1][0] === "@") {
+                                            toUser = remaining[remaining.length - 1].slice(1);
+                                            remaining.pop();
+                                        }
+
+                                        const msgText = colorFn(remaining.join(" ")) + chalk.reset("");
+                                        chatEmitter.emit("sendMessage", { message: msgText, to: toUser });
+                                        continue;
+                                    } else {
+                                        socket.write("Invalid color.\nValid colors:\n");
+
+                                        const colWidth = Math.max(...validColors.map(c => c.length)) + 2;
+
+                                        for (var i = 0; i < validColors.length; i++) {
+                                            socket.write(validColors[i].padEnd(colWidth));
+                                            if (i % 3 === 2) {
+                                                socket.write("\n");
+                                            }
+                                        }
+                                        if (validColors.length % 3 !== 0) {
+                                            socket.write("\n");
+                                        }
+                                        continue;
+                                    }
+                                } else {
+                                    socket.write("Usage: /color <color> <message>\n");
+                                    continue;
+                                }
+                            }
+
+                            var toUser = undefined;
+                            if (messageSplit.length >= 3 && messageSplit[messageSplit.length - 1][0] === "@") {
+                                toUser = messageSplit[messageSplit.length - 1].slice(1);
+                            }
+
+                            const msgText = toUser
+                                ? messageSplit.slice(0, messageSplit.length - 1).join(" ")
+                                : message;
+
+                            chatEmitter.emit("sendMessage", { message: msgText, to: toUser });
+                        }
+                    }
+
+                    break;
                 } case "message": {
                     if (!loggedIn) {
                         socket.write("You must be logged in to use this command.\n");
@@ -741,6 +832,179 @@ async function clientHandler(socket) {
 
                     chatEmitter.emit("sendMessage", { message: msgText, to: toUser });
                     break;
+                } case "collect": {
+                    if (!loggedIn) {
+                        socket.write("You need to be logged in to use this command.\n");
+                    }
+
+                    try {
+                        let money = parseInt(cmdSplit[1]);
+
+                        if (money < 0) {
+                            socket.write("Your account has been terminated for trying to scam people.\n");
+                            await utils.delay(2500);
+                            socket.write("Just kidding ;)\n");
+                            break;
+                        }
+
+                        let cards = cmdSplit[2] ? cmdSplit[2].split(",").map(a => parseInt(a)) : [];
+
+                        console.log(cmdSplit[2].split(","));
+
+                        var userMoney = await mysql.runQuerySingle("SELECT money FROM users WHERE secret = ?", [clientSecret]);
+                        if (!userMoney) {
+                            socket.write("Uh-oh!!!! Where is your money?????\n");
+                            break;
+                        }
+
+                        userMoney = parseInt(userMoney.money);
+
+                        if(isNaN(money) || userMoney < money) {
+                            socket.write("Not enough money and/or money specified improperly.\n");
+                            break;
+                        }
+                        let userCards = await (mysql.runQuery("SELECT card_id FROM user_cards WHERE user_secret = ?", [clientSecret]));
+                        
+                        console.log(userCards);
+
+                        if (!userCards) {
+                            socket.write("You have no cards??\n");
+                        }
+                        
+                        userCards = userCards.map(a => parseInt(a.card_id));
+
+                        console.log("U,C: ", userCards, cards);
+
+                        let flag = false;
+                        for(var i of cards) {
+                            let idx = userCards.indexOf(i);
+                            if(idx == -1) {
+                                socket.write("One or more cards specified is not available in your account.\n");
+                                flag = true;
+                                break;
+                            }
+                            userCards.splice(idx, 1);
+                        }
+
+                        var collectionId = crypto.randomBytes(16).toString("hex");
+
+                        if(flag) break;
+                        await mysql.runQueryNoResult("UPDATE users SET money = money - ? WHERE secret = ?", [money, clientSecret]);
+                        await mysql.runQueryNoResult("INSERT INTO collection_desc (collection_id, money) VALUES (?, ?)", [collectionId, money]);
+                        for(var i of cards) {
+                            var selectedCard = await mysql.runQuerySingle("SELECT hash FROM user_cards WHERE card_id = ? AND user_secret = ?", [i, clientSecret]);
+
+                            if (!selectedCard) {
+                                socket.write("Error: something screwed up.\n");
+                            }
+
+                            await mysql.runQueryNoResult("UPDATE user_cards SET user_secret = 'floating_card' WHERE hash = ?", [selectedCard.hash]);
+                            await mysql.runQueryNoResult("INSERT INTO collections (collection_id, card_hash) VALUES (?, ?)", [collectionId, selectedCard.hash]);
+                        }
+                        
+                        socket.write(`Created collection with id: ${collectionId}\n`);
+                    } catch (e) {
+                        console.log(e);
+                        socket.write("Usage: collect <picons> <<card1>,[card2],[card3]...,[cardN]>\n")
+                    }
+                    break;
+                } case "redeem": {
+                    if (cmdSplit.length < 2) {
+                        socket.write("Usage: redeem <collection-ID>\n");
+                        break;
+                    }
+
+                    var collections = await mysql.runQuery("SELECT card_hash FROM collections WHERE collection_id = ?", [cmdSplit[1]]);
+                    var collectionDesc = await mysql.runQuerySingle("SELECT money FROM collection_desc WHERE collection_id = ?", [cmdSplit[1]]);
+
+                    if (!collections || collections.length == 0 || !collectionDesc) {
+                        socket.write("Collection not found!\n");
+                        break;
+                    }
+
+                    for (var i of collections) {
+                        var collectionHash = i.card_hash;
+
+                        // Give the cards
+                        await mysql.runQueryNoResult("UPDATE user_cards SET user_secret = ? WHERE hash =  ?", [clientSecret, collectionHash]);
+                    }
+
+                    // Delete collection entries
+                    await mysql.runQueryNoResult("DELETE FROM collections WHERE collection_id = ?", [cmdSplit[1]]);
+                    
+                    console.log(`Money: ${collectionDesc.money}`);
+
+                    // Add the money to the user
+                    await mysql.runQueryNoResult("UPDATE users SET money = money + ? WHERE secret = ?", [collectionDesc.money, clientSecret])
+                    
+                    // Delete collection_desc entry
+                    await mysql.runQueryNoResult("DELETE FROM collection_desc WHERE collection_id = ?", [cmdSplit[1]]);
+
+                    break;
+                } case "recol": {
+                    if (cmdSplit.length < 2) {
+                        socket.write("Usage: recol <collection-ID>\n");
+                        break;
+                    }
+
+                    var collections = await mysql.runQuery("SELECT card_hash FROM collections WHERE collection_id = ?", [cmdSplit[1]]);
+                    var collectionDesc = await mysql.runQuerySingle("SELECT money FROM collection_desc WHERE collection_id = ?", [cmdSplit[1]]);
+
+                    if (!collections || collections.length == 0 || !collectionDesc) {
+                        socket.write("Collection not found!\n");
+                        break;
+                    }
+
+                    var newId = crypto.randomBytes(16).toString('hex');
+
+                    await mysql.runQueryNoResult("UPDATE collections SET collection_id = ? WHERE collection_id = ?", [newId, cmdSplit[1]]);       // ← array
+                    await mysql.runQueryNoResult("UPDATE collection_desc SET collection_id = ? WHERE collection_id = ?", [newId, cmdSplit[1]]);   // ← fixed table name, array
+
+                    socket.write(`Your new id is: ${newId}\n`);
+
+                    break;
+                } case "peek": {
+                    if (cmdSplit.length < 2) {
+                        socket.write("Usage: peek <collection-ID>\n");
+                        break;
+                    }
+
+                    var collections = await mysql.runQuery("SELECT card_hash FROM collections WHERE collection_id = ?", [cmdSplit[1]]);
+                    var collectionDesc = await mysql.runQuerySingle("SELECT money FROM collection_desc WHERE collection_id = ?", [cmdSplit[1]]);
+
+                    if (!collections || collections.length == 0 || !collectionDesc) {
+                        socket.write("Collection not found!\n");
+                    } else {
+                        var moneyVal = collectionDesc.money;
+
+                        socket.write("This collection is worth: ");
+                        socket.write(formatMoney(moneyVal));
+                        socket.write("\nThis collection has: \n");
+                        var cardTotals = {};
+
+                        for (var i of collections) {
+                            var selected_card = await mysql.runQuerySingle("SELECT card_id FROM user_cards WHERE hash = ?", [i.card_hash]);
+
+                            if (!selected_card) {
+                                socket.write("[WARNING] Invalid card stored in collection (The card might have been deleted?)");
+                            } else {
+                                if (!cardTotals[selected_card.card_id]) {
+                                    cardTotals[selected_card.card_id] = 0;
+                                }
+                                cardTotals[selected_card.card_id]++;
+                            }
+                        }
+
+                        for (var i of Object.keys(cardTotals)) {
+                            var cardDetails = await cards.getCardDetails(i);
+                                var colorFunc = chalk[cardDetails.color] || chalk.reset;
+                                socket.write(`${cardTotals[i]}x ${colorFunc(cardDetails.name + " (" + cardDetails.season + ")")}\n`);
+                        }
+                    }
+
+                    break;
+                } case "poke": {
+                    socket.write("Ouch! That tickles.\n");
                 } case "logout": case "🪵out": {
                     loggedIn = false;
                     clientSecret = "";
@@ -751,8 +1015,9 @@ async function clientHandler(socket) {
                     connectedServer = null;
                     socket.write("Logged out.\n");
                     break;
-                }
-                default: {
+                } case "yawn": {
+                    socket.write(" * Yawns *\n");
+                } default: {
                     socket.write("Unknown command.\n");
                 }
             }
