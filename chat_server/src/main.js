@@ -32,10 +32,12 @@ function send(socket, payload) {
 
 var clients = new Set();
 
+const serverName = "lawny-swaps-muter";
+
 async function auth(token) {
     const client = dgram.createSocket('udp4');
     await new Promise(resolve => client.bind(resolve));
-    client.send(Buffer.from(token), 4167, "localhost");
+    client.send(Buffer.from(`${token};${serverName}`), 4167, "localhost");
     let response;
     try {
         response = await new Promise((resolve, reject) => {

@@ -10,7 +10,10 @@ exports.run = async (port, host) => {
 
     server.on('message', async (msg, rinfo) => {
         let str = msg.toString("utf-8").trim();
-        let res = await (mysql.runQuery("SELECT * FROM tokens WHERE value = ?", [str]));
+
+        var [value, server_for] = str.split(";");
+
+        let res = await (mysql.runQuery("SELECT * FROM tokens WHERE value = ? AND server_for = ?", [value, server_for]));
 
         if (res.length === 0) {
             server.send(Buffer.from("...\n"), rinfo.port, rinfo.address);

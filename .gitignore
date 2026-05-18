@@ -140,3 +140,5 @@ vite.config.ts.timestamp-*
 
 private
 private/*
+
+trading_server/src/*.secrets

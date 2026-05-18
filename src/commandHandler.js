@@ -21,8 +21,7 @@ function welcomeMessage(socket) {
     socket.write("If you encounter any issues, please report them on GitHub\n\n");
 }
 
-const validColors = [
-    'black',           'red',            'green',
+const validColors = ['black',           'red',            'green',
     'yellow',          'blue',           'magenta',
     'cyan',            'white',          'blackBright',
     'gray',            'grey',           'redBright',
@@ -56,6 +55,7 @@ function receive(socket) {
 
         socket.on('data', onData);
         socket.once('close', onClose);
+        socket.on('error', console.log);
     });
 }
 
@@ -117,7 +117,7 @@ var commands = {
     "search-users <query>": "Search for users by username",
     "search-seasons <query>": "Search for seasons by name",
     "whoami": "Show your username",
-    "token <+|-|list|get|def> [name (except list)]": "Configure identification tokens for external services",
+    "token <+|-|list|get|def> [name (except list)] [server_id]": "Configure identification tokens for external services",
     "servers <+|-|list|get> [name (except list)]": "Attach chat servers to names",
     "connect-chat <server-url|server-name> [token-name]": "Connect to the chat server",
     "message <message> [@username]": "Send a message to the chat (optionally to a specific user)",
@@ -209,6 +209,26 @@ async function clientHandler(socket) {
 
                         socket.write(`Login successful.\nWelcome ${formatUsername(username)}.\n`);
                     }
+                    break;
+                }
+                case "whatami": {
+                    socket.write("Didn't your parent tell you?...\n");
+                    break;
+                }
+                case "whyami": {
+                    socket.write("I don't think I should be the one to tell you that. Ask you parents\n");
+                    break;
+                }
+                case "whereami": {
+                    socket.write("Up my butt and around the corner\n");
+                    break;
+                }
+                case "whenareyou": {
+                    socket.write("Well, time is universal! When are you???\n");
+                    break;
+                }
+                case "whenami": {
+                    socket.write(`Now - ${new Date().toUTCString()}\n`);
                     break;
                 }
                 case "register": {
@@ -498,14 +518,15 @@ async function clientHandler(socket) {
                     }
 
                     if (cmdSplit.length < 2) {
-                        socket.write("Usage: token <+|-|list|get|def> [name (except list)]\n");
+                        socket.write("Usage: token <+|-|list|get|def> [name (except list)] [server_id]\n");
                         continue;
                     }
 
                     if (cmdSplit[1] === "+") {
                         var name = cmdSplit[2];
-                        if (!name) {
-                            socket.write("Usage: token + <name>\n");
+                        var serverFor = cmdSplit[3];
+                        if (!(name || serverFor)) {
+                            socket.write("Usage: token + <name> <server_id>\n");
                             continue;
                         }
 
@@ -513,8 +534,8 @@ async function clientHandler(socket) {
                         var id = crypto.randomBytes(16).toString('hex');
 
                         await mysql.runQueryNoResult(
-                            "INSERT INTO tokens (id, user_secret, name, value) VALUES (?, ?, ?, ?)",
-                            [id, clientSecret, name, value]
+                            "INSERT INTO tokens (id, user_secret, name, value, server_for) VALUES (?, ?, ?, ?, ?)",
+                            [id, clientSecret, name, value, serverFor]
                         );
 
                         socket.write(`Created token ${name} with value ${value}\n`);
@@ -533,7 +554,7 @@ async function clientHandler(socket) {
                         socket.write(`Deleted token ${name}\n`);
                     } else if (cmdSplit[1] === "list") {
                         var tokens = await mysql.runQuery(
-                            "SELECT name FROM tokens WHERE user_secret = ?",
+                            "SELECT name, server_for FROM tokens WHERE user_secret = ?",
                             [clientSecret]
                         );
 
@@ -542,19 +563,19 @@ async function clientHandler(socket) {
                         } else {
                             socket.write("Tokens:\n");
                             for (var token of tokens) {
-                                socket.write(`  ${token.name}\n`);
+                                socket.write(`  ${token.name} (intended for ${token.server_for})\n`);
                             }
                         }
                     } else if (cmdSplit[1] === "get") {
                         var token = await mysql.runQuerySingle(
-                            "SELECT value FROM tokens WHERE user_secret = ? AND name = ?",
+                            "SELECT value, server_for FROM tokens WHERE user_secret = ? AND name = ?",
                             [clientSecret, cmdSplit[2]]
                         );
 
                         if (!token) {
                             socket.write("Token not found.\n");
                         } else {
-                            socket.write(`Value for token ${cmdSplit[2]}: ${token.value}\n`);
+                            socket.write(`Value for token ${cmdSplit[2]} (intented for ${token.server_for}): ${token.value}\n`);
                         }
                     } else if (cmdSplit[1] == "def") {
                         if (!cmdSplit[2]) {
@@ -580,12 +601,12 @@ async function clientHandler(socket) {
                         defaultToken = token.value;
                         socket.write(`Set default token: ${cmdSplit[2]}\n`);
                     } else {
-                        socket.write("Usage: token <+|-|list|get|def> [name (except list)]\n");
+                        socket.write("Usage: token <+|-|list|get|def> [name (except list)] [server_id]\n");
                         continue;
                     }
 
                     break;
-                } case "servers": {
+                } case "server": case "servers": {
                     if (!loggedIn) {
                         socket.write("You must be logged in to use this command.\n");
                         continue;
@@ -761,7 +782,7 @@ async function clientHandler(socket) {
                                         const remaining = messageSplit.slice(2);
 
                                         var toUser = undefined;
-                                        if (remaining.length >= 2 && remaining[remaining.length - 1][0] === "@") {
+                                        if (messageSplit.length >= 2 && messageSplit[messageSplit.length - 1][0] === "@") {
                                             toUser = remaining[remaining.length - 1].slice(1);
                                             remaining.pop();
                                         }
@@ -792,7 +813,7 @@ async function clientHandler(socket) {
                             }
 
                             var toUser = undefined;
-                            if (messageSplit.length >= 3 && messageSplit[messageSplit.length - 1][0] === "@") {
+                            if (messageSplit.length >= 2 && messageSplit[messageSplit.length - 1][0] === "@") {
                                 toUser = messageSplit[messageSplit.length - 1].slice(1);
                             }
 
