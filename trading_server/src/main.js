@@ -35,9 +35,9 @@ function receive(socket) {
     });
 }
 
-function send(socket, payload) {
-    socket.write(JSON.stringify(payload) + "\n");
-}
+// function send(socket, payload) {
+//     socket.write(JSON.stringify(payload) + "\n");
+// }
 
 var clients = new Set();
 
@@ -166,6 +166,44 @@ async function loginToFusion() {
 
 }
 
+async function recol(collectionId) {
+    await send(client, `recol ${collectionId}\n`);
+    var newId = await receiveUntilIdle(client);
+    console.log("New collection ID:", newId);
+    const match = newId.trim().match(/[0-9a-f]{32}/);
+    if (match) {
+        return match[0];
+    } else {
+        return null;
+    }
+
+}
+
+async function getCollection(collectionId) {
+    await send(client, `peek-api ${collectionId}\n`);
+
+    var data = await receiveUntilIdle(client);
+    var lines = data.trim().split("\n");
+    var worthLine = lines.find(l => l.startsWith("WORTH: "));
+    var hasLine = lines.find(l => l.startsWith("HAS: "));
+
+    if (!worthLine || !hasLine) {
+        return null;
+    }
+
+    var worthVal = worthLine.slice(7).trim();
+    var hasVal = hasLine.slice(5).trim();
+
+    if (!worthVal || !hasVal) {
+        return null;
+    }
+
+    var money = parseInt(worthVal);
+    var cards = hasVal.split(",").filter(s => s.trim() !== "").map(s => parseInt(s.trim()));
+
+    return { money, cards };
+}
+
 loginToFusion();
 
 /*
@@ -220,9 +258,7 @@ Response:
 |  error: "ERR_BOND_HAS_TWO"
 |
 +-> Response (w/ no request) - type bondReady
-|  data: {
-|      users: [<string (user1)>, <string (user2)>]
-|  }
+|  data: {}
 |  success: true
 
 +-< Request - type bondData
@@ -287,7 +323,7 @@ function makeBondID() {
 }
 
 class Bond {
-    constructor (creator) {
+    constructor (creator, creatorSocket) {
         this.clients = new Set();
         this.offers = {
             client0: null,
@@ -295,13 +331,16 @@ class Bond {
         };
 
         this.id = makeBondID();
+        this.creator = creatorSocket;
+        this.creatorId = creator;
 
         this.clients.add(creator);
     }
 
     addClient(id) {
-        if (this.clients.size() < 2) {
+        if (this.clients.size < 2) {
             this.clients.add(id);
+            return true;
         } else {
             return false;
         }
@@ -319,13 +358,13 @@ async function commandHandler(socket) {
             var data = JSON.parse(cmd.trim());
 
             if (!data.type) {
-                sendError(socket, "requestInvalid", "TMP_NO_TYPE");
+                sendError(socket, "requestInvalid", "ERR_NO_TYPE");
                 continue;
             }
 
             switch (data.type) {
                 case "createBond": {
-                    var newBond = new Bond(socket.clientId);
+                    var newBond = new Bond(socket.clientId, socket);
                     bonds.add(newBond)
 
                     sendResponse(socket, "bondCreated", {bondId: newBond.id});
@@ -334,33 +373,126 @@ async function commandHandler(socket) {
                 }
                 case "joinBond": {
 
-                    if (!data.bondId) {
-                        sendError(socket, "requestInvalid", "TMP_NO_BOND_ID");
+                    if (!data.data.bondId) {
+                        sendError(socket, "requestInvalid", "ERR_NO_BOND_ID");
+                        break;
                     }
 
-                    for (var i of bonds.values) {
-                        if (i.id == data.bondId) {
+                    var failed = false;
+                    var found = false;
+
+                    for (var i of bonds.values()) {
+                        if (failed) break;
+                        
+                        if (i.id == data.data.bondId) {
+                            found = true;
                             if (i.addClient(socket.clientId)) {
-                                sendResponse(socket, "bondJoined", {})
+                                sendResponse(socket, "bondJoined", {});
+
+                                i.joiner = socket;
+
+                                if (i.clients.size == 2) {
+                                    sendResponse(socket, "bondReady", {});
+                                    sendResponse(i.creator, "bondReady", {});
+                                }
 
                             } else {
                                 sendError(socket, "bondJoined", "ERR_BOND_HAS_TWO");
+                                failed = true;
                             }
+                                                            
                             continue;
                         }
                     }
 
-                    sendError(socket, "bondJoined", "ERR_INVALID_BOND_ID");
-                    
+                    if(!found) {
+                        if (!failed) {
+                            sendError(socket, "bondJoined", "ERR_INVALID_BOND_ID");
+                        }
+                    }
+
+                    break;
+                }
+                case "bondData": {
+                    if (!data.data.bondId) {
+                        sendError(socket, "requestInvalid", "ERR_NO_BOND_ID");
+                        break;
+                    }
+
+                    if (!data.data.offer) {
+                        sendError(socket, "requestInvalid", "ERR_NO_OFFER");
+                        break;
+                    }
+
+                    if (!data.data.expected) {
+                        sendError(socket, "requestInvalid", "ERR_NO_EXPECTED");
+                        break;
+                    }
+
+                    if (data.data.expected.picons === undefined || data.data.expected.picons === null || !Array.isArray(data.data.expected.cards)) {
+                        console.log(data.data.expected);
+                        sendError(socket, "requestInvalid", "ERR_INVALID_EXPECTED");
+                        break;
+                    }
+
+                    var bondFound = [...bonds].find(e => e.id == data.data.bondId);
+                    if (!bondFound) {
+                        sendError(socket, "bondData", "ERR_INVALID_BOND_ID");
+                        break;
+                    }
+
+                    if (bondFound.clients.size < 2) {
+                        sendError(socket, "bondData", "ERR_BOND_NOT_READY");
+                        break;
+                    }
+
+
+                    var id = await recol(data.data.offer);
+                    console.log(id);
+                    if (!id) {
+                        sendError(socket, "bondData", "ERR_INVALID_OFFER");
+                        break;
+                    }
+                    var collection = await getCollection(id);
+
+                    bondFound.offers[socket.clientId == bondFound.creatorId ? "client0" : "client1"] = {
+                        offer: id,
+                        expected: data.data.expected,
+                        collectionDeal: collection
+                    };
+
+                    if (bondFound.offers.client0 && bondFound.offers.client1) {
+                        if (bondFound.offers.client0.expected.picons == bondFound.offers.client1.collectionDeal.picons &&
+                            bondFound.offers.client0.expected.cards.every(c => bondFound.offers.client1.collectionDeal.cards.includes(c)) &&
+                            bondFound.offers.client1.expected.picons == bondFound.offers.client0.collectionDeal.picons &&
+                            bondFound.offers.client1.expected.cards.every(c => bondFound.offers.client0.collectionDeal.cards.includes(c))) {
+                                sendResponse(bondFound.creator, "tradeResponse", {traded: true, otherOffer: bondFound.offers.client1.offer});
+                                for (var c of bondFound.clients) {
+                                    if (c != bondFound.creatorId) {
+                                        sendResponse(bondFound.joiner, "tradeResponse", {traded: true, otherOffer: bondFound.offers.client0.offer});
+                                    }
+                                }
+                        } else {
+                            sendResponse(bondFound.creator, "tradeResponse", {traded: false, reason: "no_match", yourOffer: bondFound.offers.client0.offer});
+                            for (var c of bondFound.clients) {
+                                if (c != bondFound.creatorId) {
+                                    sendResponse(bondFound.joiner, "tradeResponse", {traded: false, reason: "no_match", yourOffer: bondFound.offers.client1.offer});
+                                }
+                            }
+                        }
+                        
+                        bonds.delete(bondFound);
+                    }
+
                     break;
                 }
                 default: {
                     sendError(socket, "invalidType");
                 }
-            }
+            } 
         } catch (e) {
             console.log(e);
-            sendError(socket, "requestInvalid", "TMP_INVALID_JSON");
+            sendError(socket, "requestInvalid", "ERR_INVALID_JSON");
         }
     }
 }

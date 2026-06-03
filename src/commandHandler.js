@@ -123,6 +123,9 @@ var commands = {
     "message <message> [@username]": "Send a message to the chat (optionally to a specific user)",
     "chat-console": "Enters the chat console. Use exit command to leave.",
     "logout": "Logout of your account",
+    "collect <picons> [<card1>,<card2>...<cardN>]": "Make a collection with some picons and cards. Returns a collection ID and removes these resources from your account",
+    "redeem <id>": "Redeem collection with id <id>",
+    "peek <id>": "View the contents of collection with id <id>",
     "exit": "Exit the program",
 }
 
@@ -1021,6 +1024,35 @@ async function clientHandler(socket) {
                                 var colorFunc = chalk[cardDetails.color] || chalk.reset;
                                 socket.write(`${cardTotals[i]}x ${colorFunc(cardDetails.name + " (" + cardDetails.season + ")")}\n`);
                         }
+                    }
+
+                    break;
+                } case "peek-api": {
+                    if (cmdSplit.length < 2) {
+                        socket.write("Usage: peek-api <collection-ID>\n");
+                        break;
+                    }
+
+                    var collections = await mysql.runQuery("SELECT card_hash FROM collections WHERE collection_id = ?", [cmdSplit[1]]);
+                    var collectionDesc = await mysql.runQuerySingle("SELECT money FROM collection_desc WHERE collection_id = ?", [cmdSplit[1]]);
+
+                    if (!collections || collections.length == 0 || !collectionDesc) {
+                        socket.write("COLLECTION_NOT_FOUND\n");
+                    } else {
+                        var moneyVal = collectionDesc.money;
+
+                        socket.write("WORTH: ");
+                        socket.write(moneyVal.toString());
+                        socket.write("\nHAS: ");
+                        const cardIds = [];
+                        
+                        for (var i of collections) {
+                            var selected_card = await mysql.runQuerySingle("SELECT card_id FROM user_cards WHERE hash = ?", [i.card_hash]);
+                            cardIds.push(selected_card.card_id);
+                        }
+
+                        socket.write(cardIds.join(","));
+                        socket.write("\n");
                     }
 
                     break;
