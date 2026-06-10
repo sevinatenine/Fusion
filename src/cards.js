@@ -22,6 +22,12 @@ async function getCardDetails(cardId) {
     };
 }
 
+async function listCards() {
+    const result = await mysql.runQuery(`SELECT * FROM cards`);
+
+    return result;
+}
+
 async function giveCard(userSecret, cardId) {
     const hash = crypto.randomBytes(16).toString('hex');
     await mysql.runQueryNoResult(
@@ -44,3 +50,4 @@ exports.getCardsForUser = getCardsForUser;
 exports.getCardDetails = getCardDetails;
 exports.giveCard = giveCard;
 exports.getCardTotals = getCardTotals;
+exports.listCards = listCards;

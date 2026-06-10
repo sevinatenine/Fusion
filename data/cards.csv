@@ -8,30 +8,132 @@ id,name,season_id
 6,Unix V6,1
 7,Windows 7,1
 8,uint8_t,1
+9,Cloud 9,1
 10,OS-X,1
+11,HTTP Continue,1
+12,Clock Hours,1
+13,Baker's Dozen,1
+14,IPv4 Header Min Bytes,1
+15,0x0F,1
 16,Base 16 - Hex,1
+17,UDP,1
+18,SSH Alt,1
+19,Chargen,1
 20,FTP,1
 21,FTP,1
 22,SSH,1
 23,Telnet,1
+24,Hours in a Day,1
 25,SMTP,1
+26,Alphabet Count,1
+27,WHOIS,1
+32,ASCII Space,1
+33,ASCII Exclamation,1
+37,Finger,1
 42,Answer To Life,1
+48,ASCII Zero,1
 53,DNS,1
+57,ASCII Nine,1
 64,Commodore 64,1
+65,ASCII A,1
+66,TFTP,1
+67,DHCP Server,1
+68,DHCP Client,1
+69,TFTP Alt,1
+70,Gopher,1
+79,Finger Alt,1
 80,HTTP,1
 84,TI-84,1
 86,x86,1
+97,ASCII a,1
+99,NNTP,1
+101,NIC,1
 110,POP3,1
+119,NNTP Alt,1
+123,NTP,1
+127,Localhost,1
 128,Commodore 128,1
 143,IMAP,1
+161,SNMP,1
+162,SNMP Trap,1
+179,BGP,1
+194,IRC,1
 232,RS-232,1
 255,0xFF,1
+256,One Byte Overflow,1
+389,LDAP,1
 404,404: Card Not Found,1
 418,418: I'm a teapot,1
+420,Blaze It,1
 422,RS-422,1
 443,HTTPS,1
+445,SMB,1
+465,SMTPS,1
 485,RS-485,1
+500,IKE,1
+502,Modbus,1
+512,2^9,1
+514,Syslog,1
+515,LPD,1
+520,RIP,1
+543,Kerberos,1
+587,SMTP Submission,1
+631,IPP,1
+636,LDAPS,1
+666,Doom Port,1
+993,IMAPS,1
+995,POP3S,1
+1024,1 KiB,1
+1080,SOCKS,1
+1194,OpenVPN,1
 1337,Leet,1
+1433,MSSQL,1
+1521,Oracle DB,1
 2000,Y2K,1
+2049,NFS,1
+3000,Dev Server,1
+3306,MySQL,1
+3389,RDP,1
+3690,SVN,1
+4096,4 KiB Page,1
+5432,PostgreSQL,1
+5900,VNC,1
+6379,Redis,1
+6667,IRC Alt,1
+8080,HTTP Alt,1
+8443,HTTPS Alt,1
 8664,x86_64,1
+9000,PHP-FPM,1
+9200,Elasticsearch,1
+9418,Git,1
+10000,Webmin,1
+27017,MongoDB,1
 31415,Pi,1
+32768,2^15,1
+65535,Max uint16_t,1
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

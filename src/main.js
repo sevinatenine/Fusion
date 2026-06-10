@@ -4,6 +4,7 @@ const adminPanel = require("./adminPanel");
 const authServer = require("./authServer");
 const dbLoader = require("./dbLoader");
 const utils = require("./utils");
+const auction = require("./shop.js");
 
 const PORT = 23;
 const HTTP_PORT = 80;
