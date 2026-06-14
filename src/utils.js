@@ -70,7 +70,8 @@ exports.luckTest = async function() {
 }
 
 exports.clearShopCollections = async function() {
-    await mysql.runQueryNoResult(`DELETE FROM collections WHERE card_hash IN (SELECT hash FROM user_cards WHERE user_secret LIKE 'shop_%');
-        DELETE FROM collection_desc WHERE collection_id NOT IN (SELECT DISTINCT collection_id FROM collections);
-        DELETE FROM user_cards WHERE user_secret LIKE 'shop_%';`);
+    await mysql.runQueryNoResult("DELETE FROM collections WHERE card_hash IN (SELECT hash FROM user_cards WHERE user_secret LIKE 'shop_%')", []);
+    await mysql.runQueryNoResult("DELETE FROM collection_desc WHERE collection_id NOT IN (SELECT DISTINCT collection_id FROM collections)", []);
+    await mysql.runQueryNoResult("DELETE FROM user_cards WHERE user_secret LIKE 'shop_%'", []);
+    await mysql.runQueryNoResult("DELETE FROM shop", []);
 }

@@ -8,6 +8,7 @@ const cards = require("./cards");
 const secrets = require('./secrets');
 const utils = require('./utils');
 const chatServers = require("./chatServers");
+const shop = require("./shop");
 const sysLogins = require('./sysLogins').sysLogins();
 
 const http = require('http');
@@ -1058,6 +1059,29 @@ async function clientHandler(socket) {
                     break;
                 } case "poke": {
                     socket.write("Ouch! That tickles.\n");
+                } case "shop": {
+                    if (cmdSplit.length < 2) {
+                        socket.write("Usage: shop <list|buy> [args]\n");
+                        break;
+                    }
+
+                    if (cmdSplit[1] == "list") {
+                        var shopContent = Object.values(await shop.listShop());
+
+                        for (var i of shopContent) {
+                            socket.write(`${formatMoney(i.cost)} - ${i.quantity} left: ${shop.NiceRarity[Object.keys(shop.Rarity).find(key => Math.round(shop.Rarity[key] * 10) === Math.round(i.rarity * 10))]} deck (${i.cards})\n`);
+                        } 
+
+                    } else if (cmdSplit[1] == "buy") {
+                        // shop buy rarity:count
+                        // shop buy common:1
+                        var [rarity, count] = cmdSplit[2].split(":");
+                        rarity = rarity.toLowerCase();
+                        count = parseInt(count);
+
+                    }
+
+                    break;
                 } case "logout": case "🪵out": {
                     loggedIn = false;
                     clientSecret = "";

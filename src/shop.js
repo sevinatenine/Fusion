@@ -3,6 +3,9 @@ const utils = require("./utils");
 const crypto = require("crypto");
 const mysql = require("./mysql");
 
+const chalkModule = require('chalk');
+const chalk = new chalkModule.Chalk({ level: 1 });
+
 /*
  - Card 0: 1 point
  - Next 2^2 cards: 2 points
@@ -29,7 +32,7 @@ Shop:
     - 100x 5 card common deck (can't see contents) - 1 nanon
     - 50x 5 card uncommon deck (can't see contents) - 1 micron
     - 10x 4 card rare deck (can't see contents) - 1 milon
-    - 4x 5 card ultra rare deck (can't see contents) - 1 megon
+    - 4x 5 card ultra rare deck (can't see contents) - 1 kilon
 
     - 200x Random card - 3 picons
 
@@ -43,10 +46,17 @@ Auction :
 */
 
 const Rarity = Object.freeze({
-  COMMON: 1.0,
-  UNCOMMON: 1.1,
-  RARE: 1.2,
-  ULTRARARE: 1.3
+    COMMON: 1.0,
+    UNCOMMON: 1.1,
+    RARE: 1.2,
+    ULTRARARE: 1.3
+});
+
+var NiceRarity = Object.freeze({
+    COMMON: chalk.gray("Common"),
+    UNCOMMON: chalk.green("Uncommon"),
+    RARE: chalk.cyan("Rare"),
+    ULTRARARE: chalk.magenta("Ultra Rare")
 });
 
 async function generateDeck(rarity = Rarity.COMMON, cards = 5) {
@@ -68,18 +78,40 @@ async function createShopCollection(cardIds) {
     return collectionId;
 }
 
-async function createDeck(rarity = Rarity.COMMON, cards = 5) {
-    var ids = generateDeck(rarity, cards);
+async function createDeck(rarity = Rarity.COMMON, cards = 5, cost) {
+    var ids = await generateDeck(rarity, cards);
 
-    return await createShopCollection(ids);
+    var collectionId = await createShopCollection(ids);
+
+    await mysql.runQueryNoResult("INSERT INTO shop (rarity, count, collection_id, cost) VALUES (?, ?, ?, ?)", [rarity, cards, collectionId, cost]);
+
+    return collectionId;
+}
+
+async function listShop() {
+    var totals = {};
+
+    var entries = await mysql.runQuery("SELECT * FROM shop");
+
+    for (var i of entries) {
+        var id = `id_${i.count}_${i.rarity}`;
+
+        if (id in totals) {
+            totals[id].quantity++;
+        } else {
+            totals[id] = { quantity: 1, cost: i.cost, cards: i.count, rarity: i.rarity };
+        }
+    }
+
+    return totals;
 }
 
 const shopDecks = [
-    { rarity: 1.0, qty: 100, count: 5 },
-    { rarity: 1.1, qty: 50,  count: 5 },
-    { rarity: 1.2, qty: 10,  count: 4 },
-    { rarity: 1.3, qty: 4,   count: 5 },
-    { rarity: 1.0, qty: 200, count: 1 }
+    { rarity: 1.0, qty: 100, count: 5, cost: 10     },
+    { rarity: 1.1, qty: 50,  count: 5, cost: 100    },
+    { rarity: 1.2, qty: 10,  count: 4, cost: 1000   },
+    { rarity: 1.3, qty: 4,   count: 5, cost: 100000 },
+    { rarity: 1.0, qty: 200, count: 1, cost: 3      }
 ];
 
 async function runShopRestock() {
@@ -90,12 +122,11 @@ async function runShopRestock() {
             decks.push({
                 rarity: i.rarity,
                 count: i.count,
-                collectionId: await createShopCollection(await generateDeck(i.rarity, i.count))
+                cost: i.cost,
+                collectionId: await createDeck(i.rarity, i.count, i.cost)
             });
         }
     }
-
-    console.log(decks);
 }
 
 async function runRandomAuction() {
@@ -109,7 +140,7 @@ function startScheduler(auction) {
     ];
 
     for (var i of times) {
-        var minute, hour = i;
+        var [minute, hour] = i;
 
         var job = schedule.scheduleJob(`${minute} ${hour} * * *`, () => {
             runRandomAuction();
@@ -117,9 +148,13 @@ function startScheduler(auction) {
     }
 }
 
-;(async function() {
-	await utils.delay(1000);
-	await runShopRestock();
-})();
+// ;(async function() {
+// 	await utils.delay(5000);
+// 	await runShopRestock();
+//     await listShop();
+// })();
 
 exports.startScheduler = startScheduler;
+exports.listShop = listShop;
+exports.Rarity = Rarity;
+exports.NiceRarity = NiceRarity;
