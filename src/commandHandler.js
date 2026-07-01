@@ -1073,12 +1073,49 @@ async function clientHandler(socket) {
                         } 
 
                     } else if (cmdSplit[1] == "buy") {
+                        if (cmdSplit.length < 3) {
+                            socket.write("Usage: shop buy <rarity:count>\n");
+                            break;
+                        }
+
                         // shop buy rarity:count
                         // shop buy common:1
                         var [rarity, count] = cmdSplit[2].split(":");
                         rarity = rarity.toLowerCase();
                         count = parseInt(count);
 
+                        if (!rarity || !shop) {
+                            socket.write("Usage: shop buy <rarity:count>\n");
+                            break;
+                        }
+
+                        var raritiesTable = {};
+
+                        for (var i of Object.keys(shop.Rarity)) {
+                            raritiesTable[i.toLowerCase()] = shop.Rarity[i];
+                        }
+
+                        console.log(rarity, count, raritiesTable, raritiesTable[rarity]);
+
+                        var shopContent = await shop.listShop();
+                        shopContent = Object.values(shopContent);
+
+                        var found = false;
+
+                        for (var i of shopContent) {
+                            if (toString(i.rarity) === toString(raritiesTable[rarity])) {
+                                if (i.cards == count) {
+                                    found = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        console.log(rarity, count);
+
+                        if (!found) {
+                            socket.write("Rarity/count not found.\n");
+                        }
                     }
 
                     break;
