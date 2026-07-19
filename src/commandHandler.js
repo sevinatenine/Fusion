@@ -1116,6 +1116,31 @@ async function clientHandler(socket) {
                         if (!found) {
                             socket.write("Rarity/count not found.\n");
                         }
+
+                        var entry = await mysql.runQuerySingle("SELECT * FROM shop WHERE rarity = ? AND count = ? LIMIT 1", [raritiesTable[rarity], count]);
+
+                        if (!entry) {
+                            socket.write("No stock left of this type.\n");
+                            continue;
+                        }
+
+                        var money = await mysql.runQuerySingle("SELECT money FROM users WHERE username = ?", [user.username]);
+                        console.log(money, user);
+
+                        if (!money) {
+                            socket.write("You have no money lol.\n");
+                            continue;
+                        } else if (money.money < i.cost) {
+                            socket.write("You don't have enough money to buy this.\n");
+                            continue;
+                        }
+
+                        var colID = entry.collection_id;
+
+                        await mysql.runQueryNoResult("UPDATE users SET money = money - ? WHERE username = ?", [entry.cost, user.username]);
+                        await mysql.runQueryNoResult("DELETE FROM shop WHERE rarity = ? AND count = ? LIMIT 1", [raritiesTable[rarity], count]);
+
+                        socket.write(`Your collection id is: ${colID}\nRedeem with: redeem ${colID}\n`);
                     }
 
                     break;
