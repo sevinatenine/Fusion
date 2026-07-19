@@ -142,3 +142,5 @@ private
 private/*
 
 trading_server/src/*.secrets
+meet
+.DS_Store
