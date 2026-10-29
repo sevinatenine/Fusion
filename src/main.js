@@ -12,6 +12,8 @@ const utils = require("./utils");
 //console.log("Required utils");
 const auction = require("./shop");
 //console.log("Required shop");
+const quests = require("./quests");
+const players = require("./players");
 
 const PORT = 23;
 const HTTP_PORT = 80;
@@ -27,6 +29,9 @@ const HOST = "0.0.0.0";
     server.run(PORT, HOST);
     httpServer.run(HTTP_PORT, HOST);
     authServer.run(AUTH_PORT, HOST);
+
+    quests.startQuests();
+    players.startTracking();
 
     await utils.delay(40);
 

@@ -1,0 +1,16 @@
+{
+    "dailyplaytime1": {
+        "name": "Daily Playtime 1",
+        "requirements": [
+            {
+                "type": "time",
+                "resets": "daily",
+                "value": 3
+            }
+        ],
+        "reward": {
+            "type": "picons",
+            "value": "10"
+        }
+    }
+}

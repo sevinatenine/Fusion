@@ -48,7 +48,6 @@ wss.on('connection', (socket) => {
     console.log('A new client connected!');
 
     socket.on("message", (data) => {
-        // Normalise \r\n or bare \r → \n so the server gets clean lines
         const str = Buffer.from(data).toString().replace(/\r\n|\r/g, '\n');
         child.stdin.write(str);
     });

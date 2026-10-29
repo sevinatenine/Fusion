@@ -10,6 +10,10 @@ async function runServer(PORT, HOST) {
         commandHandler.handle(socket);
 
         socket.on('end', () => {
+            if (userLoggedIn) {
+                players.playerLeft(userLoggedIn);
+            }
+            
             clients.delete(socket);
         });
     });

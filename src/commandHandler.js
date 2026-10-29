@@ -10,6 +10,7 @@ const utils = require('./utils');
 const chatServers = require("./chatServers");
 const shop = require("./shop");
 const sysLogins = require('./sysLogins').sysLogins();
+const players = require("./players");
 
 const http = require('http');
 
@@ -212,6 +213,13 @@ async function clientHandler(socket) {
                         if (tokenRow?.default_token) defaultToken = tokenRow.default_token;
 
                         socket.write(`Login successful.\nWelcome ${formatUsername(username)}.\n`);
+
+
+                        // TODO: ::NOTE:: - Spot marker for user logged in
+
+                        players.playerJoined(username);
+
+
                     }
                     break;
                 }
@@ -1164,6 +1172,9 @@ async function clientHandler(socket) {
     } catch (err) {
         if (err.message !== 'disconnected') {
             console.error('Client error:', err);
+        }
+        if (userLoggedIn) {
+            players.playerLeft(userLoggedIn);
         }
         socket.destroy();
         return;
