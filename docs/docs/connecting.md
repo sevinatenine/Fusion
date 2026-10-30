@@ -2,7 +2,18 @@
 
 You can connect over TCP with Telnet, Netcat or another client.
 
+There is a server running on Hack Club Nest and is connectable at `IPv6: 2a01:4f9:3080:3192::2144 Port: 1234`.
+
+```bash
+telnet 2a01:4f9:3080:3192::2144 1234
+```
+
 The server address is `localhost:23`
+
+You can also connect to the web terminal if the local server or telnet does not work.
+It is available [here](https://fusion.simon312.hackclub.app/terminal).
+
+[Web terminal](https://fusion.simon312.hackclub.app/terminal)
 
 ## Connecting with Windows
 

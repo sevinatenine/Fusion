@@ -37,29 +37,29 @@ const validColors = ['black',           'red',            'green',
     'bgMagentaBright', 'bgCyanBright',   'bgWhiteBright'
 ];
 
-function receive(socket) {
-    return new Promise((resolve, reject) => {
-        let buf = "";
+// function receive(socket) {
+//     return new Promise((resolve, reject) => {
+//         let buf = "";
 
-        function onData(data) {
-            buf += data;
-            const i = buf.indexOf("\n");
-            if (i !== -1) {
-                const line = buf.slice(0, i).trim();
-                buf = buf.slice(i + 1);
-                socket.off('data', onData);
-                socket.off('close', onClose);
-                resolve(line);
-            }
-        }
+//         function onData(data) {
+//             buf += data;
+//             const i = buf.indexOf("\n");
+//             if (i !== -1) {
+//                 const line = buf.slice(0, i).trim();
+//                 buf = buf.slice(i + 1);
+//                 socket.off('data', onData);
+//                 socket.off('close', onClose);
+//                 resolve(line);
+//             }
+//         }
 
-        function onClose() { reject(new Error('disconnected')); }
+//         function onClose() { reject(new Error('disconnected')); }
 
-        socket.on('data', onData);
-        socket.once('close', onClose);
-        socket.on('error', console.log);
-    });
-}
+//         socket.on('data', onData);
+//         socket.once('close', onClose);
+//         socket.on('error', console.log);
+//     });
+// }
 
 function formatUsername(username) {
     var out = username;
@@ -145,7 +145,49 @@ function formatMoney(picons) {
 
 const hasNonAscii = (str) => /[^\x00-\x7F]/.test(str);
 
+function createReceiver(socket) {
+    socket.setEncoding('utf8');   // handles split multibyte chars
+    let buf = "";
+    const lines = [];
+    let pending = null;
+    let closed = false;
+
+    const flush = () => {
+        if (!pending) return;
+        if (lines.length) {
+            const { resolve } = pending;
+            pending = null;
+            resolve(lines.shift());
+        } else if (closed) {
+            const { reject } = pending;
+            pending = null;
+            reject(new Error('disconnected'));
+        }
+    };
+
+    socket.on('data', (data) => {
+        data = data.replace(/\x1b\[[0-9;]*[A-Za-z]/g, '');  // drop arrow keys etc.
+        for (const ch of data) {
+            if (ch === '\n') { lines.push(buf.trim()); buf = ""; }
+            else if (ch === '\x7f' || ch === '\b') buf = buf.slice(0, -1);
+            else if (ch !== '\r') buf += ch;
+        }
+        flush();
+    });
+
+    socket.on('close', () => { closed = true; flush(); });
+    socket.on('error', console.log);
+
+    return () => new Promise((resolve, reject) => {
+        pending = { resolve, reject };
+        flush();
+    });
+}
+
 async function clientHandler(socket) {
+    const receiveLine = createReceiver(socket);
+    const receive = () => receiveLine();
+
     var loggedIn = false;
     var clientSecret = "";
 
@@ -290,6 +332,20 @@ async function clientHandler(socket) {
                         socket.write("(seriously - don't lose it!)\n\n");
 
                         socket.write("Registration successful.\n");
+
+                        socket.write("As a registration reward, you get 5 random cards!\n");
+
+                        for (var i = 0; i < 5; i++) {
+                            var id = await utils.getRandomCard();
+                            var cardDetails = await cards.getCardDetails(id);
+                            var colorFunc = chalk[cardDetails.color] || chalk.reset;
+
+                            socket.write(` - ${colorFunc(cardDetails.name + " (" + cardDetails.season + ")")}\n`);
+
+                            await cards.giveCard(clientSecret, id);
+                        }
+
+                        socket.write("\nView your cards with the \"cards\" command!\n\n")
 
                         userLoggedIn = username;
 
