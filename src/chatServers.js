@@ -63,6 +63,6 @@ exports.createChatServerConnection = async function(address, accessToken, socket
 
     chatEmitter.on("closeChat", () => {
         client.end();
-        delete client;
+        client = null;
     });
 }

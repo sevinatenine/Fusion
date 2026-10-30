@@ -330,6 +330,7 @@ async function clientHandler(socket) {
                     break;
                 } 
                 case "exit": case "quit": {
+                    if (userLoggedIn) players.playerLeft(userLoggedIn);
                     socket.write("Goodbye!\n");
                     socket.end();
                     return;
@@ -1153,6 +1154,7 @@ async function clientHandler(socket) {
 
                     break;
                 } case "logout": case "🪵out": {
+                    if (userLoggedIn) players.playerLeft(userLoggedIn);
                     loggedIn = false;
                     clientSecret = "";
                     userLoggedIn = "";
