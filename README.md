@@ -18,9 +18,28 @@ telnet 2a01:4f9:3080:3192::2144 1234
 
 View the docs [here](https://fusion.simon312.hackclub.app/).
 
-## Running
-Install dependencies with `npm install`
-Run with `npm run serve`
+## Running the server yourself
+
+First you need to clone the repo with:
+
+```bash
+git clone https://github.com/sevinatenine/Fusion
+```
+
+Then install dependencies with `npm install`
+
+Then either run with `npm run serve`
+
+Or run with:
+```bash
+node src/main.js
+```
+
+Then connect to `localhost:23` with:
+
+```bash
+telnet localhost 23
+```
 
 ## Doc Generation
 Install python packages with `pip3 install -r requirements.txt`
